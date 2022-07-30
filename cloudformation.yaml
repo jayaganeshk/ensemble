@@ -1,0 +1,123 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: "Backend Resources for Ensemble project"
+
+Parameters:
+  RDSARN:
+    Description: "ARN of the RDS Instance"
+    Type: String
+    Default: "arn:aws:rds:us-east-1:847397054438:cluster:ensemble-db"
+  SecretsARN:
+    Description: "ARN of the RDS secret"
+    Type: String
+    Default: "arn:aws:secretsmanager:us-east-1:847397054438:secret:ensemble-db-admin-password-wRZT4x"
+
+Globals:
+  Api:
+    OpenApiVersion: "3.0.1"
+
+  Function:
+    Runtime: python3.9
+    Handler: index.lambda_handler
+    Timeout: 10
+    Tags:
+      project: ensemble
+
+Resources:
+  LAMBDAROLE:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      RoleName: ENSEMBLE_LAMBDA_ROLE
+      AssumeRolePolicyDocument: >-
+        {"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"Service":"lambda.amazonaws.com"},"Action":"sts:AssumeRole"}]}
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+        - "arn:aws:iam::aws:policy/AmazonAPIGatewayInvokeFullAccess"
+      Description: ""
+
+  DIGITALSIGNAGEPORTALLAMBDAEXECUTIONVPCPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - rds-data:*
+              - secretsmanager:*
+            Resource: "*"
+            Effect: Allow
+            Sid: VisualEditor0
+      Roles:
+        - !Ref LAMBDAROLE
+      PolicyName: ENSEMBLE_LAMBDA_POLICY
+
+  ENSEMBLEAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: dev
+      Name: ENSEMBLE_API
+      EndpointConfiguration:
+        Type: REGIONAL
+      Cors:
+        AllowMethods: "'*'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        AllowOrigin: "'*'"
+
+  ENSEMBLEDISEASEPREDICTION:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: ENSEMBLE_DISEASE_PREDICTION
+      InlineCode: |
+        import json
+
+        def lambda_handler(event, context):
+            # TODO implement
+            print(event)
+            return {
+                'statusCode': 200,
+                'body': json.dumps('Hello from Lambda!')
+            }
+      Role: !GetAtt LAMBDAROLE.Arn
+      Environment:
+        Variables:
+          DB_HOST: !Ref RDSARN
+          DB_NAME: ensemble
+          secretName: !Ref SecretsARN
+      Events:
+        ApiEvent0:
+          Type: Api
+          Properties:
+            Path: /diseaseprediction
+            Method: POST
+            RestApiId:
+              Ref: ENSEMBLEAPI
+
+  ENSEMBLEPNEUMONIAACTION:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: ENSEMBLE_PNEUMONIA_ACTION
+      InlineCode: |
+        import json
+
+        def lambda_handler(event, context):
+            # TODO implement
+            print(event)
+            return {
+                'statusCode': 200,
+                'body': json.dumps('Hello from Lambda!')
+            }
+      Role: !GetAtt LAMBDAROLE.Arn
+      Environment:
+        Variables:
+          DB_HOST: !Ref RDSARN
+          DB_NAME: ensemble
+          secretName: !Ref SecretsARN
+      Events:
+        ApiEvent0:
+          Type: Api
+          Properties:
+            Path: /pneumoniaaction
+            Method: POST
+            RestApiId:
+              Ref: ENSEMBLEAPI

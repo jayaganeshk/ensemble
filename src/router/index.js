@@ -8,6 +8,9 @@ import UserInfoStore from "../app/user-info-store";
 import UserInfoApi from "../app/user-info-api";
 import ErrorComponent from "@/components/Error";
 
+import CreateCase from "@/components/Pages/CreateCase";
+import CaseHistory from "@/components/Pages/CaseHistory";
+
 Vue.use(Router);
 
 function requireAuth(to, from, next) {
@@ -35,6 +38,19 @@ export default new Router({
       name: "Home",
       component: Home,
       beforeEnter: requireAuth,
+      children: [
+        { path: "", redirect: { name: "CreateCase" } },
+        {
+          path: "CreateCase",
+          name: "CreateCase",
+          component: CreateCase,
+        },
+        {
+          path: "CaseHistory",
+          name: "CaseHistory",
+          component: CaseHistory,
+        },
+      ],
     },
     {
       path: "/login",

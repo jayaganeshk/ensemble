@@ -25,13 +25,16 @@ export default {
     let Login = {};
     Login[cognitoKey] = IDToken;
 
+    // console.log("Login :", JSON.stringify(Login));
     AWS.config.credentials = new AWS.CognitoIdentityCredentials({
       IdentityPoolId: process.env.VUE_APP_COGNITO_IDENTITY_POOL_ID,
       Logins: Login,
     });
-
     return axios.get(USERINFO_URL, requestData).then((response) => {
       return response.data;
     });
+  },
+  getIDToken() {
+    return auth.auth.getSignInUserSession().getIdToken().jwtToken;
   },
 };
