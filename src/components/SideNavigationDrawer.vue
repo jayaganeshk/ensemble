@@ -25,7 +25,22 @@
         </v-list-item-action>
       </v-list-item>
 
-      <v-list dense>
+      <v-list>
+        <v-list-item>
+          <v-list-item-icon>
+            <v-avatar color="white" size="32">
+              {{ userAvatar }}
+            </v-avatar>
+          </v-list-item-icon>
+          <v-list-item-content class="white--text text-subtitle-2">
+            {{ userInfo.username }}
+          </v-list-item-content>
+        </v-list-item>
+        <v-divider
+          style="color: white; background-color: white"
+          class="mx-2"
+        ></v-divider>
+
         <v-list-item v-for="item in items" :key="item.title" link>
           <v-list-item-icon>
             <v-icon color="white">{{ item.icon }}</v-icon>
