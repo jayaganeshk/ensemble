@@ -36,7 +36,7 @@
               :to="item.route"
               style="text-decoration: none; color: inherit"
             >
-              <v-list-item-title class="white--text">
+              <v-list-item-title class="white--text text-subtitle-2">
                 {{ item.title }}
               </v-list-item-title>
             </router-link>

@@ -27,12 +27,18 @@
                     chips
                     label="Symptoms"
                     multiple
-                    solo
+                    outlined
                   ></v-autocomplete>
                 </v-col>
               </v-row>
               <v-row>
-                <v-btn @click="onSubmit" color="#262D4C" class="white--text">
+                <v-btn
+                  @click="onSubmit"
+                  color="#262D4C"
+                  class="white--text"
+                  :disabled="isLoading"
+                  :loading="isLoading"
+                >
                   Create
                 </v-btn>
               </v-row>
@@ -42,6 +48,26 @@
         <v-card-actions> </v-card-actions>
       </v-card>
     </div>
+    <v-dialog v-model="showDialog" max-width="290">
+      <v-card>
+        <v-card-title class="text-h5"> Prediction Completed </v-card-title>
+
+        <v-card-text>
+          We have predicted that the patient has {{ predictedDisease }}
+        </v-card-text>
+
+        <v-card-actions>
+          <v-spacer></v-spacer>
+
+          <v-btn color="green darken-1" text @click="dialog = false">
+            close
+          </v-btn>
+          <v-btn color="green darken-1" text @click="dialog = false">
+            continue
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -58,17 +84,17 @@ export default {
     items: [
       {
         label: "Patient's Name",
-        model: "name",
+        model: "user_name",
         rules: [(v) => !!v || "Name is required"],
       },
       {
         label: "Patient's Phone Number",
-        model: "phoneNumber",
+        model: "user_phone",
         rules: [(v) => !!v || "Phone Number is required"],
       },
       {
         label: "Email",
-        model: "email",
+        model: "user_mail",
       },
     ],
     autocompleteItems: [
@@ -207,6 +233,9 @@ export default {
     ],
     values: [],
     value: null,
+    isLoading: false,
+    showDialog: false,
+    predictedDisease: "",
   }),
   computed: {
     symptoms: {
@@ -225,6 +254,7 @@ export default {
     onSubmit() {
       this.$refs.form.validate();
       if (this.valid) {
+        this.isLoading = true;
         console.log("this.pateientData :", this.pateientData);
 
         let IDToken = UserInfoAPI.getIDToken();
@@ -242,9 +272,13 @@ export default {
           })
           .then((response) => {
             console.log("API Response :", response);
+            this.predictedDisease = response.data;
+            this.showDialog = true;
+            this.isLoading = false;
           })
           .catch((error) => {
             console.error("Error ", error);
+            this.isLoading = false;
           });
       }
     },
