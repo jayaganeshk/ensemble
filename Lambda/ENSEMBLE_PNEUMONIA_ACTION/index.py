@@ -3,6 +3,7 @@ import boto3
 import os
 
 client = boto3.client('rds-data')
+lambda_client = boto3.client('lambda')
 
 DB_NAME = os.environ.get('DB_NAME')
 DB_ARN = os.environ.get('DB_ARN')
@@ -24,14 +25,25 @@ def execute_query(sql_statement):
         return e
 
 
+def predict(s3uri):
+    uri = s3uri[25:]
+    lambda_payload = {"URI": uri}
+    lambda_response = lambda_client.invoke(FunctionName='arn:aws:lambda:us-east-1:847397054438:function:abPneumoniaAction',
+                                           InvocationType='RequestResponse',
+                                           Payload=json.dumps(lambda_payload))
+    return json.loads(lambda_response['Payload'].read().decode("UTF-8"))['body']
+
+
 def lambda_handler(event, context):
     # TODO implement
     print(event)
 
     body = json.loads(event['body'])
-    print(body)
+    # print(body)
     # pneumonia_action
-    result = "positive"
+    response = predict(body['URI'])
+    result = response['Inference']
+
     sql_statement = "INSERT INTO pneumonia_action (user_id, pneumonia_action, result) VALUES ('" + \
         str(body['ID']) + "','" + body['URI'] + "','" + result + "')"
 
@@ -47,7 +59,7 @@ def lambda_handler(event, context):
                 "access-control-allow-methods": "GET,OPTIONS,DELETE, POST, PATCH",
                 "access-control-allow-headers": "*"
             },
-            'body': json.dumps(result)
+            'body': json.dumps(response)
         }
     else:
         return {

@@ -47,8 +47,11 @@
       </v-col>
     </v-row>
 
-    <v-row class="ma-2" justify="center">
-      <v-alert outlined type="success" text v-if="showDialog">
+    <v-row class="ma-2" justify="center" v-if="showDialog">
+      <v-alert outlined type="success" text v-if="resultCode == 0">
+        {{ apiResult }}
+      </v-alert>
+      <v-alert outlined type="error" text v-if="resultCode == 1">
         {{ apiResult }}
       </v-alert>
     </v-row>
@@ -95,7 +98,8 @@ export default {
       { text: "Date", value: "created_on" },
     ],
     showDialog: false,
-    apiResult: "API Result",
+    apiResult: "",
+    resultCode: 0,
     XRayLoading: false,
   }),
   methods: {
@@ -119,7 +123,8 @@ export default {
         })
         .then((response) => {
           console.log("API Response :", response);
-          this.apiResult = response.data;
+          this.apiResult = response.data.Inference;
+          this.resultCode = response.data.Result;
           this.showDialog = true;
           console.log("result :", this.apiResult);
           console.log("showDialog :", this.showDialog);
