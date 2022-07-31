@@ -8,15 +8,17 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
-    "core-js": "^3.8.3",
-    "vue": "^2.6.14",
-    "vuetify": "^2.6.0",
-    "vue-router": "^3.5.1",
-    "vuex": "^3.6.2",
     "amazon-cognito-auth-js": "^1.3.3",
     "amazon-cognito-identity-js": "^4.6.0",
-    "aws-sdk": "^2.888.0",
-    "axios": "^0.21.1"
+    "aws-sdk": "^2.1185.0",
+    "axios": "^0.21.1",
+    "core-js": "^3.8.3",
+    "fs": "^0.0.1-security",
+    "moment": "^2.29.4",
+    "vue": "^2.6.14",
+    "vue-router": "^3.5.1",
+    "vuetify": "^2.6.0",
+    "vuex": "^3.6.2"
   },
   "devDependencies": {
     "@babel/core": "^7.12.16",

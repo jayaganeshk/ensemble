@@ -4,7 +4,6 @@
       <v-card-title class="font-weight-bold text--h4">
         Patient History
       </v-card-title>
-      {{ showItem }}
       <v-spacer></v-spacer>
       <v-col cols="12" sm="4">
         <v-text-field
@@ -46,7 +45,7 @@
 import UserInfoAPI from "@/app/user-info-api";
 import axios from "axios";
 
-import PatientDetail from "@/components/Pages/PatientDetail.vue";
+import PatientDetail from "@/components/widgets/PatientDetail.vue";
 export default {
   name: "PatientHistoryTable",
   components: { PatientDetail },
