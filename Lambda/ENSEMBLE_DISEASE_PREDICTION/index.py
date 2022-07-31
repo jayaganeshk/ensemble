@@ -3,6 +3,7 @@ import boto3
 import os
 
 client = boto3.client('rds-data')
+lambda_client = boto3.client('lambda')
 
 DB_NAME = os.environ.get('DB_NAME')
 DB_ARN = os.environ.get('DB_ARN')
@@ -46,15 +47,24 @@ def generate_sql_statement(body):
     return statementQuery
 
 
-def predict_disease(body):
-    return "Pneumonia"
+def predict_disease(symptoms):
+    lambda_payload = {"Symptoms": symptoms}
+    lambda_response = lambda_client.invoke(FunctionName='arn:aws:lambda:us-east-1:847397054438:function:abDiseasePrediction',
+                                           InvocationType='RequestResponse',
+                                           Payload=json.dumps(lambda_payload))
+    precited = json.loads(
+        lambda_response['Payload'].read().decode("UTF-8"))['body']
+    print("precited :", precited)
+    return precited
 
 
 def lambda_handler(event, context):
     print("event :", event)
     body = json.loads(event['body'])
     print("event :", event)
-    body['prognosis'] = predict_disease(body)
+    prediction = predict_disease(body["symptoms"])
+    print("prediction: ", prediction)
+    body['prognosis'] = prediction
     sql_statement = generate_sql_statement(body)
     print("sql_statement :", sql_statement)
     dbResponse = execute_query(sql_statement)
@@ -68,7 +78,7 @@ def lambda_handler(event, context):
                 "access-control-allow-methods": "GET,OPTIONS,DELETE, POST, PATCH",
                 "access-control-allow-headers": "*"
             },
-            'body': json.dumps('Pneumonia')
+            'body': json.dumps(prediction)
         }
     else:
         return {
