@@ -48,7 +48,7 @@
         <v-card-actions> </v-card-actions>
       </v-card>
     </div>
-    <v-dialog v-model="showDialog" max-width="290">
+    <v-dialog v-model="showDialog" max-width="290" persistent>
       <v-card>
         <v-card-title class="text-h5"> Prediction Completed </v-card-title>
 
@@ -59,10 +59,10 @@
         <v-card-actions>
           <v-spacer></v-spacer>
 
-          <v-btn color="green darken-1" text @click="dialog = false">
+          <v-btn color="green darken-1" text @click="showDialog = false">
             close
           </v-btn>
-          <v-btn color="green darken-1" text @click="dialog = false">
+          <v-btn color="green darken-1" text @click="continueToDetails">
             continue
           </v-btn>
         </v-card-actions>
@@ -281,6 +281,12 @@ export default {
             this.isLoading = false;
           });
       }
+    },
+    continueToDetails() {
+      this.$router.push({
+        path: "/CaseHistory",
+        query: { search: this.pateientData["user_name"] },
+      });
     },
     capitalizeWords(string) {
       return string.replace(/(?:^|\s)\S/g, function (a) {

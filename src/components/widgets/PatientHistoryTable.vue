@@ -31,8 +31,8 @@
             mdi-open-in-new
           </v-icon>
         </template>
-      </v-data-table></v-row
-    >
+      </v-data-table>
+    </v-row>
     <PatientDetail
       :dialogProp="showItem"
       :detailsProp="selectedItem"
@@ -109,7 +109,11 @@ export default {
     },
   },
   created() {
-    console.log("Created ");
+    // console.log(this.$route.query.search);
+    let search = this.$route.query.search;
+    if (search) {
+      this.search = search;
+    }
     this.fetchAllPatients();
   },
 };

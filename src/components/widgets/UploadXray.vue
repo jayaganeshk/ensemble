@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="font-weight-medium text-h6 ma-2">X-Ray History</div>
+    <div class="font-weight-medium text-h6 ma-2">Diagnostics</div>
     <v-row class="ma-2">
       <v-col cols="12" sm="6"> </v-col>
       <v-col cols="12" sm="6">
@@ -46,6 +46,27 @@
         </v-row>
       </v-col>
     </v-row>
+
+    <v-row class="ma-2" justify="center">
+      <v-alert outlined type="success" text v-if="showDialog">
+        {{ apiResult }}
+      </v-alert>
+    </v-row>
+    <v-row class="ma-2">
+      <v-data-table
+        :headers="headers"
+        :items="XRayHistory"
+        :items-per-page="10"
+        :loading="XRayLoading"
+        loading-text="Loading... Please wait"
+      >
+        <template v-slot:[`item.actions`]="{ item }">
+          <v-icon medium class="mr-2" @click="editItem(item)">
+            mdi-open-in-new
+          </v-icon>
+        </template>
+      </v-data-table>
+    </v-row>
   </div>
 </template>
 
@@ -62,66 +83,120 @@ export default {
   data: () => ({
     files: [],
     isLoading: false,
+    XRayHistory: [],
+    headers: [
+      {
+        text: "ID",
+        align: "start",
+        value: "id",
+      },
+      { text: "File Name", value: "pneumonia_action" },
+      { text: "Result", value: "result" },
+      { text: "Date", value: "created_on" },
+    ],
+    showDialog: false,
+    apiResult: "API Result",
+    XRayLoading: false,
   }),
   methods: {
-    onUpload() {
+    async onUpload() {
       console.log("this.files ", this.files);
       this.isLoading = true;
+
+      let postBody = await this.uploadtoS3();
+
+      let IDToken = UserInfoAPI.getIDToken();
+
+      const headers = {
+        "Content-Type": "application/json",
+        Authorization: IDToken,
+      };
+      const apiURL = process.env.VUE_APP_API_URL + "/pneumoniaaction ";
+      console.log("apiURL ", apiURL);
+      axios
+        .post(apiURL, postBody, {
+          headers: headers,
+        })
+        .then((response) => {
+          console.log("API Response :", response);
+          this.apiResult = response.data;
+          this.showDialog = true;
+          console.log("result :", this.apiResult);
+          console.log("showDialog :", this.showDialog);
+          this.isLoading = false;
+          this.files = [];
+          this.getXrayHistory();
+        })
+        .catch((error) => {
+          console.error("Error ", error);
+          this.isLoading = false;
+        });
+    },
+    getXrayHistory() {
+      this.XRayLoading = true;
+      let IDToken = UserInfoAPI.getIDToken();
+      const headers = {
+        "Content-Type": "application/json",
+        Authorization: IDToken,
+      };
+      const apiURL =
+        process.env.VUE_APP_API_URL + "/xrayhistory?id=" + this.details.id;
+      console.log("apiURL ", apiURL);
+      axios
+        .get(apiURL, {
+          headers: headers,
+        })
+        .then((response) => {
+          console.log("API Response :", response);
+          this.XRayHistory = response.data;
+          this.XRayLoading = false;
+        })
+        .catch((error) => {
+          console.error("Error ", error);
+          this.XRayLoading = false;
+        });
+    },
+    async uploadtoS3() {
       let file = this.files[0];
       let de = this.details;
-      getCredentials.getCredentials().then(function (credentials) {
-        console.log("credentials from upload: ", credentials);
-        const s3 = new AWS.S3({
-          accessKeyId: credentials.key,
-          secretAccessKey: credentials.secretkey,
-        });
 
-        var datetime = moment().format("YYYY-MM-DDThh:mm:ss.ms");
+      let credentials = await getCredentials.getCredentials();
+      console.log("credentials from upload: ", credentials);
 
-        var params = {
-          Bucket: "ab-sagemaker-bucket",
-          Key:
-            "chest_xray/patients/" +
-            de.user_name +
-            "_" +
-            de.id +
-            "/" +
-            datetime +
-            "/" +
-            file.name,
-          Body: file,
-        };
-        var options = { partSize: 10 * 1024 * 1024, queueSize: 1 };
+      const s3 = new AWS.S3({
+        accessKeyId: credentials.key,
+        secretAccessKey: credentials.secretkey,
+      });
+
+      var datetime = moment().format("YYYY-MM-DDThh:mm:ss.ms");
+
+      var options = { partSize: 10 * 1024 * 1024, queueSize: 1 };
+      var params = {
+        Bucket: "ab-sagemaker-bucket",
+        Key:
+          "chest_xray/patients/" +
+          de.user_name +
+          "_" +
+          de.id +
+          "/" +
+          datetime +
+          "/" +
+          file.name,
+        Body: file,
+      };
+
+      return new Promise((resolve, reject) => {
         s3.upload(params, options, function (err, data) {
           if (err) {
             console.log(err);
+            reject(err);
           } else {
             console.log("Data :", data);
 
             let postBody = {};
             postBody["URI"] = "s3://ab-sagemaker-bucket/" + data.Key;
-
-            let IDToken = UserInfoAPI.getIDToken();
-            // console.log("ID TOken ", IDToken);
-
-            const headers = {
-              "Content-Type": "application/json",
-              Authorization: IDToken,
-            };
-            const apiURL = process.env.VUE_APP_API_URL + "/pneumoniaaction ";
-            console.log("apiURL ", apiURL);
-            axios
-              .post(apiURL, postBody, {
-                headers: headers,
-              })
-              .then((response) => {
-                console.log("API Response :", response);
-                this.isLoading = false;
-              })
-              .catch((error) => {
-                console.error("Error ", error);
-                this.isLoading = false;
-              });
+            postBody["ID"] = de.id;
+            resolve(postBody);
           }
         });
       });
@@ -133,6 +208,9 @@ export default {
         return this.uploadDetailsProp;
       },
     },
+  },
+  created: function () {
+    this.getXrayHistory();
   },
 };
 </script>
