@@ -24,6 +24,33 @@ def execute_query(sql_statement):
         print(e)
         return e
 
+def execute_select_query(sql_statement):
+    try:
+        response = client.execute_statement(
+            database=DB_NAME,
+            resourceArn=DB_ARN,
+            includeResultMetadata=True,
+            secretArn=SECRETS_ARN,
+            sql=sql_statement
+        )
+        if(response['ResponseMetadata']['HTTPStatusCode'] == 200):
+            dbcols = []
+            for col in response['columnMetadata']:
+                dbcols.append(col['label'])
+            result = []
+            for record in response['records']:
+                obj = {}
+                for index, val in enumerate(record):
+                    key = list(val.keys())[0]
+                    obj[dbcols[index]] = val[key]
+                result.append(obj)
+
+            return result
+
+    except Exception as e:
+        print(e)
+        return False
+
 
 def generate_sql_statement(body):
     colsName = "("

@@ -51,6 +51,11 @@ def lambda_handler(event, context):
     print("sql_statement :", sql_statement)
     dbResponse = execute_query(sql_statement)
     print("dbResponse :", dbResponse)
+    for response in dbResponse:
+        s3 = response['pneumonia_action']
+        split = s3.split('/')
+        response['pneumonia_action'] = split[-1]
+        print("response ", response)
     if(dbResponse):
         return {
             'statusCode': 200,

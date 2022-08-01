@@ -62,6 +62,8 @@
         :items-per-page="10"
         :loading="XRayLoading"
         loading-text="Loading... Please wait"
+        :sort-by.sync="sortBy"
+        :sort-desc.sync="sortDesc"
       >
         <template v-slot:[`item.actions`]="{ item }">
           <v-icon medium class="mr-2" @click="editItem(item)">
@@ -87,6 +89,8 @@ export default {
     files: [],
     isLoading: false,
     XRayHistory: [],
+    sortBy: "id",
+    sortDesc: true,
     headers: [
       {
         text: "ID",
